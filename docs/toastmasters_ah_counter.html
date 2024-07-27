@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=0.8">
+    <title>Toastmasters Ah Counter</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            margin: 20px;
+            background-color: #8B0000;
+            color: #FFF;
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        #left-column,
+        #right-column {
+            width: 45%;
+        }
+
+        #left-column {
+            background-color: #FFE4C4;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        #right-column {
+            background-color: #8B0000;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        #left-heading,
+        #speakerInputLabel {
+            color: #8B0000;
+        }
+
+        #speakerInput {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            width: 80%;
+            color: #333;
+        }
+
+        .filler-word-container {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+
+        .filler-word-counter {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .filler-word-buttons button {
+            padding: 10px 14px;
+            font-size: 12px;
+            margin: 0 5px;
+            cursor: pointer;
+            background-color: #8B0000;
+            color: #FFF;
+            border: none;
+            border-radius: 4px;
+        }
+
+        .remove-button {
+            background-color: #FFD700;
+            color: #8B0000;
+            border: none;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        #records {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        #recordsTable {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        #recordsTable th, #recordsTable td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            color: #FFF;
+        }
+
+        #recordsTable th {
+            background-color: #8B0000;
+        }
+
+        #saveRecordBtn, #addFillerWordBtn, #resetBtn {
+            padding: 12px 16px;
+            font-size: 14px;
+            cursor: pointer;
+            background-color: #8B0000;
+            color: #FFF;
+            border: none;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="left-column">
+        <h1 id="left-heading">Filler Word Counters</h1>
+
+        <label for="speakerInput" id="speakerInputLabel">Speaker Name:</label>
+        <input type="text" id="speakerInput" placeholder="Enter speaker's name">
+
+        <div id="fillerWordSection">
+            <!-- Filler words will be dynamically added here -->
+        </div>
+
+        <button id="resetBtn" onclick="resetCounters()">Reset Counters</button>
+        <button id="saveRecordBtn" onclick="saveRecord()">Save Record</button>
+        <button id="addFillerWordBtn" onclick="addFillerWord()">Add Custom Filler Word</button>
+    </div>
+
+    <div id="right-column">
+        <h1>Saved Filler Word Records</h1>
+
+        <table id="recordsTable">
+            <thead>
+                <tr>
+                    <th>Speaker Name</th>
+                    <th>Ah</th>
+                    <th>Um</th>
+                    <th>Err</th>
+                    <th>Well</th>
+                    <th>So</th>
+                    <th>Like</th>
+                    <th>But</th>
+                    <th>And</th>
+					<th>You know</th>
+					<th>Others</th>
+                    <!-- Add more columns for other filler words as needed -->
+                </tr>
+            </thead>
+            <tbody id="recordsList"></tbody>
+        </table>
+    </div>
+
+    <script>
+        let counters = {};
+
+        function initializeCounters() {
+            const fillerWords = ['ah', 'um', 'err', 'well', 'so', 'like', 'but', 'and','you know','others']; // Default filler words
+            fillerWords.forEach(word => {
+                counters[word] = 0;
+                createFillerWordSection(word);
+            });
+        }
+
+        function createFillerWordSection(word) {
+            const fillerWordSection = document.getElementById('fillerWordSection');
+            const existingContainer = document.getElementById(`${word}Container`);
+
+            if (existingContainer) {
+                existingContainer.innerHTML = '';
+            } else {
+                const fillerWordContainer = document.createElement('div');
+                fillerWordContainer.className = 'filler-word-container';
+                fillerWordContainer.id = `${word}Container`;
+
+                const counterElement = document.createElement('div');
+                counterElement.className = 'filler-word-counter';
+                counterElement.id = `${word}Counter`;
+                counterElement.innerText = `${capitalizeFirstLetter(word)}: 0`;
+
+                const buttonsContainer = document.createElement('div');
+                buttonsContainer.className = 'filler-word-buttons';
+                const addButton = document.createElement('button');
+                addButton.innerHTML = `+`;
+                addButton.onclick = function () { incrementCounter(word) };
+                const removeButton = document.createElement('button');
+                removeButton.innerHTML = '-';
+                removeButton.className = 'remove-button';
+                removeButton.onclick = function () { decrementCounter(word) };
+
+                buttonsContainer.appendChild(addButton);
+                buttonsContainer.appendChild(removeButton);
+
+                fillerWordContainer.appendChild(counterElement);
+                fillerWordContainer.appendChild(buttonsContainer);
+
+                fillerWordSection.appendChild(fillerWordContainer);
+            }
+        }
+
+        function addFillerWord() {
+            const newWord = prompt("Enter the new filler word:");
+            if (newWord && !counters[newWord]) {
+                counters[newWord] = 0;
+                createFillerWordSection(newWord);
+            }
+        }
+
+        function incrementCounter(word) {
+            counters[word]++;
+            updateCounterDisplay(word);
+        }
+
+        function decrementCounter(word) {
+            if (counters[word] > 0) {
+                counters[word]--;
+                updateCounterDisplay(word);
+            }
+        }
+
+        function updateCounterDisplay(word) {
+            const counterElement = document.getElementById(`${word}Counter`);
+            counterElement.innerText = `${capitalizeFirstLetter(word)}: ${counters[word]}`;
+        }
+
+        function resetCounters() {
+            Object.keys(counters).forEach(word => {
+                counters[word] = 0;
+                updateCounterDisplay(word);
+            });
+            document.getElementById('speakerInput').value = ''; // Clear speaker name
+        }
+
+        function updateAllCountersDisplay() {
+            Object.keys(counters).forEach(word => {
+                updateCounterDisplay(word);
+            });
+        }
+
+        function capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+
+        function saveRecord() {
+            const speakerName = document.getElementById('speakerInput').value;
+            const recordList = document.getElementById('recordsList');
+            const recordRow = document.createElement('tr');
+            const tdSpeaker = document.createElement('td');
+            tdSpeaker.textContent = speakerName;
+            recordRow.appendChild(tdSpeaker);
+
+            Object.keys(counters).forEach(word => {
+                const td = document.createElement('td');
+                td.textContent = counters[word];
+                recordRow.appendChild(td);
+            });
+
+            recordList.appendChild(recordRow);
+            clearFillerWordSection();
+            initializeCounters();
+            updateAllCountersDisplay();
+        }
+
+        function clearFillerWordSection() {
+            const fillerWordSection = document.getElementById('fillerWordSection');
+            fillerWordSection.innerHTML = '';
+        }
+
+        document.addEventListener('DOMContentLoaded', initializeCounters);
+    </script>
+
+</body>
+</html>
